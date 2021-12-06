@@ -17,19 +17,31 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity implements LocationListener {
 
     Button startButton;
+    TextView txtView;
+    TextView txtView1;
+    TextView txtView2;
     private boolean isClicked = true;
     LocationManager locationManager;
-
+    int speedFinal;
+    int speedStarting;
+    boolean speedSelector = true;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         startButton = findViewById(R.id.startButton);
+        txtView = findViewById(R.id.textView2);
+        txtView1 = findViewById(R.id.textView3);
+        txtView2 = findViewById(R.id.textView4);
 
         // Location's Permission check on create of the App.
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
@@ -111,7 +123,6 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     public void start1(View view) {
         Toast.makeText(this, "MESSAGE BOX START :)", Toast.LENGTH_SHORT).show();
-        started();
     }
 
     public void log1(View view) {
@@ -121,27 +132,41 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     public void map1(View view) {
         Toast.makeText(this, "MESSAGE BOX MAP :)", Toast.LENGTH_SHORT).show();
     }
-
+    int temp=0;
     @Override
     public void onLocationChanged(Location location) {
-        if (isClicked) {
+
+        if (!isClicked) {
             if (location == null) {
                 // if you can't get speed because reasons :)
 
-                Toast.makeText(this, "NULL LOCATION", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(this, "NULL LOCATION", Toast.LENGTH_SHORT).show();
             } else {
                 //int speed=(int) ((location.getSpeed()) is the standard which returns meters per second. In this example i converted it to kilometers per hour
 
-                int speed = (int) ((location.getSpeed() * 3600) / 1000);
-                String speedStr = String.valueOf(speed);
-                Toast.makeText(this, speedStr, Toast.LENGTH_SHORT).show();
+                speedStarting = (int) ((location.getSpeed() * 3600) / 1000);
+                txtView.setText(String.valueOf(speedStarting));
+                txtView2.setText(String.valueOf(speedFinal));
+                checkAccel();
+                //Toast.makeText(this, speedStr, Toast.LENGTH_SHORT).show();
             }
         }
     }
-
-
-    void started() {
-
+    void checkAccel() {
+        int Du=speedStarting - speedFinal;
+        txtView1.setText(String.valueOf(speedFinal - speedStarting));
+        if (Du > 10){
+            getWindow().getDecorView().setBackgroundColor(Color.BLUE);
+            Toast.makeText(this, "accel", Toast.LENGTH_SHORT).show();
+            speedFinal = speedStarting;
+        }
+        else if (Du < -10){
+            getWindow().getDecorView().setBackgroundColor(Color.RED);
+            speedFinal = speedStarting;
+        }
+//        else if (Du == 0){
+//            //getWindow().getDecorView().setBackgroundColor(Color.WHITE);
+//        }
     }
 
     void checkMovement() {

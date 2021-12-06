@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1084141499086",
+    "project_id": "gpsaccelerometer",
+    "storage_bucket": "gpsaccelerometer.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1084141499086:android:1003a509c61439c185d69f",
+        "android_client_info": {
+          "package_name": "com.example.gpsaccelerometer"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1084141499086-so56uot2u7fe0gf2jnpa8g81oicufquj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCvugTdUmJn_wDzE4SYVgX1nAFlEZk2SRk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1084141499086-so56uot2u7fe0gf2jnpa8g81oicufquj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
