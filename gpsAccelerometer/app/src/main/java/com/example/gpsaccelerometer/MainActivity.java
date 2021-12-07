@@ -1,5 +1,6 @@
 package com.example.gpsaccelerometer;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -20,6 +21,14 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -30,10 +39,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     TextView txtView1;
     TextView txtView2;
     private boolean isClicked = true;
-    LocationManager locationManager;
     int speedFinal;
     int speedStarting;
-    boolean speedSelector = true;
+    FirebaseDatabase database;
+    DatabaseReference reference;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -145,6 +154,11 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 //int speed=(int) ((location.getSpeed()) is the standard which returns meters per second. In this example i converted it to kilometers per hour
 
                 speedStarting = (int) ((location.getSpeed() * 3600) / 1000);
+                lati = String.valueOf(location.getLatitude());
+                longi = String.valueOf(location.getLongitude());
+                Date date = new Date(location.getTime());
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss a");
+                time =  sdf.format(date);
                 txtView.setText(String.valueOf(speedStarting));
                 txtView2.setText(String.valueOf(speedFinal));
                 checkAccel();
@@ -152,21 +166,51 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             }
         }
     }
+    String time;
+    public String lati , longi;
     void checkAccel() {
         int Du=speedStarting - speedFinal;
         txtView1.setText(String.valueOf(speedFinal - speedStarting));
         if (Du > 10){
             getWindow().getDecorView().setBackgroundColor(Color.BLUE);
             Toast.makeText(this, "accel", Toast.LENGTH_SHORT).show();
+
+            pusher(true);
+
             speedFinal = speedStarting;
         }
         else if (Du < -10){
             getWindow().getDecorView().setBackgroundColor(Color.RED);
+            pusher(false);
             speedFinal = speedStarting;
         }
 //        else if (Du == 0){
 //            //getWindow().getDecorView().setBackgroundColor(Color.WHITE);
 //        }
+    }
+    int k =0;
+    int id=0;
+    void pusher(boolean type){
+        System.out.println("pusher");
+        // Write a message to the database
+        FirebaseDatabase database = FirebaseDatabase.getInstance("https://gpsaccelerometer-99b4c-default-rtdb.firebaseio.com/");
+        DatabaseReference myRef = database.getReference("user"+id);
+        DatabaseReference dbref1 = myRef.child("event"+k);
+        DatabaseReference dbref2 = dbref1.child("speed");
+        dbref2.setValue(speedFinal);
+        DatabaseReference dbref3 = dbref1.child("time");
+        dbref3.setValue(time);
+        DatabaseReference dbref4 = dbref1.child("location");
+        dbref4.setValue(lati+","+longi);
+        if(type) {
+            DatabaseReference dbref5 = dbref1.child("accelType");
+            dbref5.setValue("acceleration");
+        }
+        else {
+            DatabaseReference dbref5 = dbref1.child("accelType");
+            dbref5.setValue("deceleration");
+        }
+        k++;
     }
 
     void checkMovement() {
