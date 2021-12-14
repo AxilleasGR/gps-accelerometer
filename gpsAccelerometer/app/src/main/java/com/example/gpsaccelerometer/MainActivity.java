@@ -1,5 +1,7 @@
 package com.example.gpsaccelerometer;
 
+import static android.content.ContentValues.TAG;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -16,6 +18,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -36,22 +39,16 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     Button startButton;
     TextView txtView;
-    TextView txtView1;
-    TextView txtView2;
     private boolean isClicked = true;
     int speedFinal;
     int speedStarting;
-    FirebaseDatabase database;
-    DatabaseReference reference;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         startButton = findViewById(R.id.startButton);
         txtView = findViewById(R.id.textView2);
-        txtView1 = findViewById(R.id.textView3);
-        txtView2 = findViewById(R.id.textView4);
-
+        txtView.setText("- km/h");
         // Location's Permission check on create of the App.
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -65,34 +62,20 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
             // if Boolean variable isClicked is true.
             if (isClicked) {
-//                //Provide Location's updates.
-//                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
-                //locationManager.requestLocationUpdates(locationManager.);
-
+                id++;
                 startButton.setText("Stop");
-
-                //Background Color becomes green.
-                getWindow().getDecorView().setBackgroundColor(Color.GREEN);
 
                 isClicked = false;
                 checkMovement();
                 // Toast Message.
-                Toast.makeText(this, "Speed capture is enabled", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Speed logging is enabled", Toast.LENGTH_SHORT).show();
             } else {
                 //Stop getting Location's updates.
-                ///locationManager.removeUpdates((LocationListener) this);
-                //actionBar.setTitle("Speedometer");
-                //actionBar.setBackgroundDrawable(new ColorDrawable(Color.parseColor("#14C5DC")));
-                //speedTextView.setText("--");
-
-                //Background Color becomes white.
-                getWindow().getDecorView().setBackgroundColor(Color.WHITE);
-
+                txtView.setText("-- km/h");
                 startButton.setText("Start");
-
                 isClicked = true;
                 // Toast Message.
-                Toast.makeText(this, "Speed capture is disabled", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Speed logging is disabled", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -101,12 +84,10 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     public void isLocationEnabled(Context context) {
         LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         boolean gps_enabled = false;
-
         try {
             gps_enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
         } catch (Exception ex) {
         }
-
         if (!gps_enabled) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setCancelable(true);
@@ -129,29 +110,20 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
     }
 
-
-    public void start1(View view) {
-        Toast.makeText(this, "MESSAGE BOX START :)", Toast.LENGTH_SHORT).show();
-    }
-
-    public void log1(View view) {
-        Toast.makeText(this, "MESSAGE BOX LOG :)", Toast.LENGTH_SHORT).show();
-    }
-
     public void map1(View view) {
-        Toast.makeText(this, "MESSAGE BOX MAP :)", Toast.LENGTH_SHORT).show();
+        startActivity(new Intent(MainActivity.this, MapsActivity.class));
     }
-    int temp=0;
+
     @Override
     public void onLocationChanged(Location location) {
 
         if (!isClicked) {
             if (location == null) {
                 // if you can't get speed because reasons :)
-
-                //Toast.makeText(this, "NULL LOCATION", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "NULL LOCATION", Toast.LENGTH_SHORT).show();
             } else {
-                //int speed=(int) ((location.getSpeed()) is the standard which returns meters per second. In this example i converted it to kilometers per hour
+                //int speed=(int) ((location.getSpeed()) is the standard which returns m/s.
+                //In this example i converted it to km/h.
 
                 speedStarting = (int) ((location.getSpeed() * 3600) / 1000);
                 lati = String.valueOf(location.getLatitude());
@@ -159,42 +131,41 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 Date date = new Date(location.getTime());
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss a");
                 time =  sdf.format(date);
-                txtView.setText(String.valueOf(speedStarting));
-                txtView2.setText(String.valueOf(speedFinal));
+                txtView.setText(String.valueOf(speedStarting)+"km/h");
                 checkAccel();
-                //Toast.makeText(this, speedStr, Toast.LENGTH_SHORT).show();
             }
         }
     }
+
     String time;
     public String lati , longi;
+
     void checkAccel() {
         int Du=speedStarting - speedFinal;
-        txtView1.setText(String.valueOf(speedFinal - speedStarting));
         if (Du > 10){
-            getWindow().getDecorView().setBackgroundColor(Color.BLUE);
-            Toast.makeText(this, "accel", Toast.LENGTH_SHORT).show();
-
+            txtView.setTextColor(Color.GREEN);
+            Toast.makeText(this, "Accelerated from "+String.valueOf(speedFinal)+"km/h to "
+                    +String.valueOf(speedStarting)+"km/h", Toast.LENGTH_SHORT).show();
             pusher(true);
-
             speedFinal = speedStarting;
         }
         else if (Du < -10){
-            getWindow().getDecorView().setBackgroundColor(Color.RED);
+            txtView.setTextColor(Color.RED);
+            Toast.makeText(this, "Decelerated from "+String.valueOf(speedStarting)+"km/h to "
+                    +String.valueOf(speedFinal)+"km/h", Toast.LENGTH_SHORT).show();
             pusher(false);
             speedFinal = speedStarting;
         }
-//        else if (Du == 0){
-//            //getWindow().getDecorView().setBackgroundColor(Color.WHITE);
-//        }
     }
+
     int k =0;
-    int id=0;
+    int id=2;
+    DatabaseReference myRef;
+    FirebaseDatabase database = FirebaseDatabase.getInstance("https://gpsaccelerometer-99b4c-default-rtdb.firebaseio.com/");
     void pusher(boolean type){
         System.out.println("pusher");
-        // Write a message to the database
-        FirebaseDatabase database = FirebaseDatabase.getInstance("https://gpsaccelerometer-99b4c-default-rtdb.firebaseio.com/");
-        DatabaseReference myRef = database.getReference("user"+id);
+        // Write log to the database
+        myRef = database.getReference("user"+id);
         DatabaseReference dbref1 = myRef.child("event"+k);
         DatabaseReference dbref2 = dbref1.child("speed");
         dbref2.setValue(speedFinal);
@@ -202,20 +173,21 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         dbref3.setValue(time);
         DatabaseReference dbref4 = dbref1.child("location");
         dbref4.setValue(lati+","+longi);
+        DatabaseReference dbref5;
         if(type) {
-            DatabaseReference dbref5 = dbref1.child("accelType");
+            dbref5 = dbref1.child("accelType");
             dbref5.setValue("acceleration");
         }
         else {
-            DatabaseReference dbref5 = dbref1.child("accelType");
+            dbref5 = dbref1.child("accelType");
             dbref5.setValue("deceleration");
         }
         k++;
     }
-
     void checkMovement() {
         LocationManager lm = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
             // here to request the missing permissions, and then overriding
